@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import "./Demo.css";
+
+const minAspectRatio = 0.5;
+const maxAspectRatio = 1.5;
 
 const defaultSrc =
   "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg";
@@ -10,6 +13,9 @@ export const Demo: React.FC = () => {
   const [image, setImage] = useState(defaultSrc);
   const [cropData, setCropData] = useState("#");
   const [cropper, setCropper] = useState<any>();
+
+  const cropperRef = useRef<HTMLImageElement>(null);
+
   const onChange = (e: any) => {
     e.preventDefault();
     let files;
@@ -39,20 +45,60 @@ export const Demo: React.FC = () => {
         <br />
         <br />
         <Cropper
+          ref={cropperRef}
           style={{ height: 400, width: "100%" }}
           initialAspectRatio={1}
           preview=".img-preview"
           src={image}
-          viewMode={1}
+          viewMode={2}
           guides={true}
-          minCropBoxHeight={10}
-          minCropBoxWidth={10}
+          minCropBoxHeight={50}
+          minCropBoxWidth={50}
           background={false}
           responsive={true}
           autoCropArea={1}
+          cropmove={() => {
+            if (cropperRef) {
+              const imageElement: any = cropperRef?.current;
+              const cropper: any = imageElement?.cropper;
+
+              console.log({ cropper });
+
+              var cropBoxData = cropper.getCropBoxData();
+              var aspectRatio = cropBoxData.width / cropBoxData.height;
+
+              if (aspectRatio < minAspectRatio) {
+                cropper.setCropBoxData({
+                  width: cropBoxData.height * minAspectRatio
+                });
+              } else if (aspectRatio > maxAspectRatio) {
+                cropper.setCropBoxData({
+                  width: cropBoxData.height * maxAspectRatio
+                });
+              }
+            }
+          }}
           checkOrientation={false} // https://github.com/fengyuanchen/cropperjs/issues/671
           onInitialized={(instance) => {
+            console.log({ instance });
+
             setCropper(instance);
+
+            var cropper = instance;
+            var containerData = cropper.getContainerData();
+            var cropBoxData = cropper.getCropBoxData();
+            var aspectRatio = cropBoxData.width / cropBoxData.height;
+            var newCropBoxWidth;
+
+            if (aspectRatio < minAspectRatio || aspectRatio > maxAspectRatio) {
+              newCropBoxWidth =
+                cropBoxData.height * ((minAspectRatio + maxAspectRatio) / 2);
+
+              cropper.setCropBoxData({
+                left: (containerData.width - newCropBoxWidth) / 2,
+                width: newCropBoxWidth
+              });
+            }
           }}
         />
       </div>
