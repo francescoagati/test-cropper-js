@@ -1,7 +1,11 @@
 import React, { useRef, useState } from "react";
 import Cropper from "react-cropper";
+
+import jQuery from "jquery";
+
 import "cropperjs/dist/cropper.css";
 import "./Demo.css";
+import { Buttons } from "./Buttons";
 
 const minAspectRatio = 0.5;
 const maxAspectRatio = 1.5;
@@ -37,6 +41,8 @@ export const Demo: React.FC = () => {
     }
   };
 
+  const buttons = Buttons(cropperRef);
+
   return (
     <div>
       <div style={{ width: "100%" }}>
@@ -50,6 +56,7 @@ export const Demo: React.FC = () => {
           initialAspectRatio={1}
           preview=".img-preview"
           src={image}
+          dragMode={"move"}
           viewMode={2}
           guides={true}
           minCropBoxHeight={50}
@@ -60,21 +67,37 @@ export const Demo: React.FC = () => {
           cropmove={() => {
             if (cropperRef) {
               const imageElement: any = cropperRef?.current;
-              const cropper: any = imageElement?.cropper;
+              const cropper: Cropper = imageElement?.cropper;
 
-              console.log({ cropper });
+              if (cropper) {
+                var cropBoxData = cropper.getCropBoxData();
+                var aspectRatio = cropBoxData.width / cropBoxData.height;
 
-              var cropBoxData = cropper.getCropBoxData();
-              var aspectRatio = cropBoxData.width / cropBoxData.height;
+                if (aspectRatio < minAspectRatio) {
+                  //ugly experiment
+                  jQuery(".cropper-line").css({
+                    backgroundColor: "red",
+                    opacity: 0.5
+                  });
 
-              if (aspectRatio < minAspectRatio) {
-                cropper.setCropBoxData({
-                  width: cropBoxData.height * minAspectRatio
-                });
-              } else if (aspectRatio > maxAspectRatio) {
-                cropper.setCropBoxData({
-                  width: cropBoxData.height * maxAspectRatio
-                });
+                  cropper.setCropBoxData({
+                    width: cropBoxData.height * minAspectRatio
+                  });
+                } else if (aspectRatio > maxAspectRatio) {
+                  jQuery(".cropper-line").css({
+                    backgroundColor: "red",
+                    opacity: 0.5
+                  });
+
+                  cropper.setCropBoxData({
+                    width: cropBoxData.height * maxAspectRatio
+                  });
+                } else {
+                  jQuery(".cropper-line").css({
+                    backgroundColor: "#39f",
+                    opacity: 0.1
+                  });
+                }
               }
             }
           }}
@@ -102,6 +125,9 @@ export const Demo: React.FC = () => {
           }}
         />
       </div>
+
+      <div className="col-md-12"> {buttons}</div>
+
       <div>
         <div className="box" style={{ width: "50%", float: "right" }}>
           <h1>Preview</h1>
