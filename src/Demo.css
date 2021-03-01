@@ -6,3 +6,10 @@
 .img-preview {
   overflow: hidden;
 }
+
+.point-nw,
+.point-ne,
+.point-sw,
+.point-se {
+  display: none;
+}

@@ -16,7 +16,7 @@ const defaultSrc =
 export default class Demo extends React.Component {
   cropperRef: any;
   ref: React.RefObject<unknown>;
-  constructor(props) {
+  constructor(props: Readonly<{}>) {
     super(props);
     this.state = { width: 0, height: 0 };
     this.ref = createRef();
@@ -30,12 +30,12 @@ export default class Demo extends React.Component {
     if (cropperRef) {
       const action: string = e.detail.action;
 
+      console.log({ action });
+
       const imageElement: any = cropperRef?.current;
       const cropper: Cropper = imageElement?.cropper;
 
       if (cropper) {
-        console.log(3);
-
         var cropBoxData = cropper.getCropBoxData();
         var aspectRatio = cropBoxData.width / cropBoxData.height;
 
@@ -44,10 +44,10 @@ export default class Demo extends React.Component {
 
         //console.log({ action, prop, value, width, height });
 
-        console.log({ width, height });
-
         let prop: string = null;
-        let value: number = 0;
+        let value: number = 0,
+          valueH = 0,
+          valueW = 0;
 
         if (action === "n" || action === "s") {
           prop = "height";
@@ -67,7 +67,28 @@ export default class Demo extends React.Component {
             value = cropBoxData.width * minAspectRatio;
         }
 
-        if (value !== 0) {
+        if (
+          action === "nw" ||
+          action === "ne" ||
+          action === "sw" ||
+          action === "se"
+        ) {
+          prop = "wh";
+
+          if (aspectRatio > maxAspectRatio) {
+            valueW = cropBoxData.width * maxAspectRatio;
+            valueH = cropBoxData.height * maxAspectRatio;
+          }
+
+          if (aspectRatio < minAspectRatio) {
+            valueW = cropBoxData.width * minAspectRatio;
+            valueH = cropBoxData.height * minAspectRatio;
+          }
+
+          console.log({ prop, valueW, valueH });
+        }
+
+        if (value !== 0 || valueW !== 0 || valueH !== 0) {
           jQuery(".cropper-line").css({
             backgroundColor: "red",
             opacity: 0.5
@@ -77,8 +98,12 @@ export default class Demo extends React.Component {
           //props[prop] = value;
 
           if (prop === "width") props.width = this.state.width;
-
           if (prop === "height") props.height = this.state.height;
+
+          if (prop === "wh") {
+            props.width = this.state.width;
+            props.height = this.state.height;
+          }
 
           cropper.setCropBoxData(props);
         } else {
@@ -89,7 +114,9 @@ export default class Demo extends React.Component {
 
           this.setState({
             width: cropBoxData.width,
-            height: cropBoxData.height
+            height: cropBoxData.height,
+            top: cropBoxData.top,
+            left: cropBoxData.left
           });
         }
       }
@@ -112,7 +139,7 @@ export default class Demo extends React.Component {
             preview=".img-preview"
             src={defaultSrc}
             dragMode={"move"}
-            viewMode={2}
+            viewMode={3}
             guides={true}
             minCropBoxHeight={50}
             minCropBoxWidth={50}
